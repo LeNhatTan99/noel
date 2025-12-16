@@ -63,6 +63,9 @@
     <canvas id="camera-preview"></canvas>
 
     <script>
+        const MUSIC_URL = "./audio.mp3";
+        let bgMusic = new Audio(MUSIC_URL);
+        bgMusic.loop = true; bgMusic.volume = 1.0;
         // ==========================================
         // 1. GENERATE RESOURCES
         // ==========================================
@@ -541,6 +544,7 @@
             btn.style.display = 'none';
             document.getElementById('loading').style.display = 'block';
             isSystemStarted = true;
+            bgMusic.play().catch(e => console.log(e));
             init3D();
 
             const video = document.getElementsByClassName('input_video')[0];
