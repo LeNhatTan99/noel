@@ -63,7 +63,7 @@
     </div>
 
     <div id="canvas-container"></div>
-    <video class="input_video" style="display:none"></video>
+    <!-- <video class="input_video" style="display:none"></video> -->
     <video class="input_video" playsinline webkit-playsinline style="display:none"></video>
     <canvas id="camera-preview"></canvas>
 
@@ -146,12 +146,18 @@
         // ==========================================
         // 2. SYSTEM CONFIG
         // ==========================================
+        const isMobile = window.innerWidth < 800;
+
         const CONFIG = {
-            leafCount: 8000, lightCount: 900, giftCount: 100,
+            leafCount: isMobile ? 6000 : 8000, 
+            lightCount: isMobile ? 700 : 900, 
+            giftCount: isMobile ? 70 : 100,
+
             explodeRadius: 65, photoOrbitRadius: 32,
-            treeHeight: 80, treeBaseRadius: 32,
-            snowCount: 6000,
-            energyCount: 10000,
+            treeHeight: 80, treeBaseRadius: 36,
+
+            snowCount: isMobile ? 4000 : 6000, 
+            energyCount: isMobile ? 2000 : 3000,
         };
         let scene, camera, renderer;
         let groupLeaf, groupLight, groupGift, groupSnow, groupEnergy, groupStars;
