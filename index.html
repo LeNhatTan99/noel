@@ -569,6 +569,7 @@
             btn.style.display = 'none';
             document.getElementById('loading').style.display = 'block';
             isSystemStarted = true;
+            bgMusic.play().catch(e => console.log(e));
             init3D();
 
             const video = document.getElementsByClassName('input_video')[0];
