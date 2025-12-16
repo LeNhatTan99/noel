@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Christmas Tree - Ground Absorption</title>
+    <title>Christmas Tree - NTTheShy</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -11,7 +11,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000005; font-family: 'Segoe UI', sans-serif; }
+        body { 
+            margin: 0; overflow: hidden; 
+            background: radial-gradient(circle at 50% 50%, #1a1f35 0%, #000005 80%);
+            font-family: 'Segoe UI', sans-serif; 
+        }
         #canvas-container { width: 100%; height: 100vh; display: block; }
         
         #ui-layer {
@@ -50,7 +54,7 @@
     </style>
 </head>
 <body>
-    <div id="loading">Gathering Nature Energy...</div>
+    <div id="loading"></div>
     <div id="ui-layer">
         <div class="guide">
             🖐 <b>Open:</b> Explode &nbsp;|&nbsp; 🫶 <b>Heart:</b> Love &nbsp;|&nbsp; ✊ <b>Fist:</b> Tree
@@ -76,65 +80,28 @@
             ctx.fillStyle = index % 2 === 0 ? '#004d00' : '#006400';
             ctx.fillRect(0,0,256,256);
             ctx.font = 'bold 100px Arial';
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText((index + 1).toString(), 128, 128);
-            ctx.strokeStyle = '#FFFF00'; ctx.lineWidth = 10;
-            ctx.strokeRect(0,0,256,256);
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        // Hàm tạo hình ảnh tạm (số 1, 2, 3...) nếu không có ảnh thật
-        function createPlaceholderTexture(index) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            
-            // Màu nền xanh lá đậm
-            ctx.fillStyle = index % 2 === 0 ? '#004d00' : '#006400';
-            ctx.fillRect(0,0,256,256);
-            
-            // Vẽ số thứ tự
-            ctx.font = 'bold 100px Arial';
             ctx.fillStyle = 'rgba(255,255,255,0.5)';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText((index + 1).toString(), 128, 128);
-            
-            // Viền vàng
             ctx.strokeStyle = '#FFFF00'; ctx.lineWidth = 10;
             ctx.strokeRect(0,0,256,256);
-            
             return new THREE.CanvasTexture(canvas);
         }
 
-        // --- KHỞI TẠO TEXTURE LOADER ---
         const loader = new THREE.TextureLoader();
-
-        const photoFiles = ['./image1.jpeg', './image2.jpeg', './image3.jpeg', './image4.jpeg', './image5.jpeg', './image6.jpeg'];
+        const photoFiles = ['./image1.jpeg', './image3.jpeg', './image4.jpeg', './image5.jpeg'];
         const photoTextures = [];
 
         for(let i=0; i<5; i++) {
             photoTextures[i] = createPlaceholderTexture(i);
-
-            loader.load(
-                photoFiles[i],
-                function (texture) {
-                    // Nếu tải thành công:
-                    photoTextures[i] = texture;
-                    
-                    if(photoMeshes.length > i) {
-                        photoMeshes[i].material.map = texture;
-                        photoMeshes[i].material.needsUpdate = true;
-                    }
-                },
-                undefined, // onProgress
-                function (err) {
-                    console.log(`Chưa tìm thấy file ${photoFiles[i]}, đang dùng hình thay thế.`);
+            loader.load(photoFiles[i], function (texture) {
+                photoTextures[i] = texture;
+                if(photoMeshes.length > i) {
+                    photoMeshes[i].material.map = texture;
+                    photoMeshes[i].material.needsUpdate = true;
                 }
-            );
+            }, undefined, function (err) { console.log(`Missing file ${photoFiles[i]}`); });
         }
-
-        photoFiles.forEach((f, i) => photoTextures[i] = loader.load(f));
 
         function createCustomTexture(type) {
             const canvas = document.createElement('canvas');
@@ -158,11 +125,22 @@
                 ctx.fillStyle = '#FFD700'; ctx.fillRect(x + (34 * scale), y, bar, size); 
                 ctx.fillRect(x, y + (34 * scale), size, bar);
                 ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2 * scale; ctx.strokeRect(x, y, size, size);
+            } else if (type === 'star') {
+                const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30);
+                grd.addColorStop(0, '#FFFFFF'); 
+                grd.addColorStop(0.5, 'rgba(200, 200, 255, 0.5)'); 
+                grd.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grd; ctx.fillRect(0,0,128,128);
             }
             return new THREE.CanvasTexture(canvas);
         }
 
-        const textures = { leaf: createCustomTexture('leaf_glow'), light: createCustomTexture('led_light'), gift: createCustomTexture('gift_red') };
+        const textures = { 
+            leaf: createCustomTexture('leaf_glow'), 
+            light: createCustomTexture('led_light'), 
+            gift: createCustomTexture('gift_red'),
+            star: createCustomTexture('star') 
+        };
 
         // ==========================================
         // 2. SYSTEM CONFIG
@@ -170,14 +148,14 @@
         const CONFIG = {
             leafCount: 8000, lightCount: 900, giftCount: 100,
             explodeRadius: 65, photoOrbitRadius: 32,
-            treeHeight: 80, treeBaseRadius: 36,
-            snowCount: 2000, 
-            energyCount: 3000,
+            treeHeight: 80, treeBaseRadius: 32,
+            snowCount: 6000,
+            energyCount: 10000,
         };
         let scene, camera, renderer;
-        let groupLeaf, groupLight, groupGift, groupSnow, groupEnergy;
+        let groupLeaf, groupLight, groupGift, groupSnow, groupEnergy, groupStars;
         let photoMeshes = []; let titleMesh, starMesh, loveMesh;
-        let state = 'TREE'; let selectedIndex = 0; let handX = 0.5;
+        let state = 'TREE'; let selectedIndex = 2; let handX = 0.5;
         let startTime = 0; 
         let isSystemStarted = false;
 
@@ -187,15 +165,17 @@
         function init3D() {
             const container = document.getElementById('canvas-container');
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x000005, 0.002);
+            scene.fog = new THREE.FogExp2(0x050510, 0.0015);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 2000);
             camera.position.z = 100;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             container.appendChild(renderer.domElement);
+
+            createGalaxyBackground();
 
             groupLeaf = createParticleSystem('leaf', CONFIG.leafCount, 2.2);
             groupLight = createParticleSystem('light', CONFIG.lightCount, 3.5); 
@@ -210,36 +190,60 @@
             animate();
         }
 
+        function createGalaxyBackground() {
+            const starCount = 2000;
+            const positions = []; const sizes = []; const colors = [];
+            for(let i=0; i<starCount; i++) {
+                const x = (Math.random() - 0.5) * 1000;
+                const y = (Math.random() - 0.5) * 1000;
+                const z = -200 - Math.random() * 800;
+                positions.push(x, y, z);
+                sizes.push(Math.random() * 3 + 1);
+                
+                const col = new THREE.Color();
+                col.setHSL(0.6 + Math.random()*0.1, 0.8, 0.8 + Math.random()*0.2);
+                colors.push(col.r, col.g, col.b);
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            
+            const mat = new THREE.PointsMaterial({
+                size: 1.0, map: textures.star, transparent: true, opacity: 0.8,
+                blending: THREE.AdditiveBlending, depthWrite: false, vertexColors: true
+            });
+            groupStars = new THREE.Points(geo, mat);
+            scene.add(groupStars);
+        }
+
         function createEnergySystem() {
             const positions = []; const sizes = []; const colors = [];
             const velocities = []; 
 
-            const colGreen = new THREE.Color(0x32CD32); // Lime Green
-            const colGold = new THREE.Color(0xFFD700);  // Gold
+            const colGreen = new THREE.Color(0x32CD32); 
+            const colGold = new THREE.Color(0xFFD700); 
 
             for(let i=0; i<CONFIG.energyCount; i++) {
-                // 1. Xuất phát: Ở rất xa (bán kính 100 -> 200)
                 const startR = 100 + Math.random() * 120; 
                 const theta = Math.random() * Math.PI * 2;
-                
-                // 2. Độ cao: Sát mặt đất (thấp hơn đáy cây một chút)
                 const y = -CONFIG.treeHeight / 2 - 2 + (Math.random() - 0.5) * 5; 
                 
                 const x = startR * Math.cos(theta);
                 const z = startR * Math.sin(theta);
-
                 positions.push(x, y, z);
                 
-                sizes.push(Math.random() * 5.5 + 3.5); 
+                sizes.push(Math.random() * 7.0 + 5.0); 
                 
                 const rand = Math.random();
                 const color = (rand > 0.8) ? colGold : colGreen;
                 colors.push(color.r, color.g, color.b);
+                
                 velocities.push(
-                    theta,          // 0: Angle
-                    startR,         // 1: Current Radius
-                    0.3 + Math.random() * 0.4, // 2: Speed (nhanh hơn chút)
-                    startR          // 3: Start Radius
+                    theta,          
+                    startR,         
+                    0.05 + Math.random() * 0.08,
+                    startR          
                 );
             }
             
@@ -249,10 +253,10 @@
             geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             geo.userData = { velocity: velocities };
 
-            // Material có độ trong suốt để tạo cảm giác "khí"
             const mat = new THREE.PointsMaterial({
                 size: 1.0, map: textures.leaf, transparent: true, 
-                opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, 
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, 
                 vertexColors: true 
             });
             
@@ -263,52 +267,34 @@
 
         function updateEnergy(time) {
             if (!groupEnergy || !groupEnergy.visible) return;
-            
             const positions = groupEnergy.geometry.attributes.position.array;
-            const sizes = groupEnergy.geometry.attributes.size.array; // Để chỉnh hiệu ứng biến mất
+            const sizes = groupEnergy.geometry.attributes.size.array;
             const params = groupEnergy.geometry.userData.velocity;
-            
-            // Đích đến: Vòng tròn đáy của cây (bán kính ~36)
             const targetRadius = CONFIG.treeBaseRadius - 2; 
 
             for(let i=0; i<CONFIG.energyCount; i++) {
                 const idx = i*3;
-                let angle = params[i*4];
-                let currentR = params[i*4 + 1];
-                const speed = params[i*4 + 2];
-                const startR = params[i*4 + 3];
+                let angle = params[i*4]; let currentR = params[i*4 + 1]; const speed = params[i*4 + 2]; const startR = params[i*4 + 3];
 
-                // DI CHUYỂN: Từ ngoài vào trong (giảm bán kính)
                 currentR -= speed;
+                angle += 0.003; 
 
-                // Hiệu ứng xoắn ốc nhẹ khi vào gần
-                angle += 0.005; 
-
-                // Nếu bán kính nhỏ hơn đáy cây (đã chạm vào cây) -> Reset ra xa
                 if (currentR < targetRadius) {
-                    currentR = startR; // Reset về vị trí xa
-                    // Đổi góc ngẫu nhiên để không bị lặp
-                    params[i*4] = Math.random() * Math.PI * 2; 
-                    angle = params[i*4];
+                    currentR = startR; params[i*4] = Math.random() * Math.PI * 2; angle = params[i*4];
                 }
 
-                // Cập nhật tọa độ
                 positions[idx] = currentR * Math.cos(angle);
                 positions[idx+2] = currentR * Math.sin(angle);
                 
-                // Hiệu ứng visual: 
                 const distToTree = currentR - targetRadius;
                 if (distToTree < 25) {
-                    sizes[i] = (distToTree / 25) * 8.0;
+                    sizes[i] = (distToTree / 25) * 9.0; // Max size to hơn
                 } else {
-                    sizes[i] = 8.0;
+                    sizes[i] = 9.0;
                 }
 
-                // Lưu lại bán kính mới
-                params[i*4 + 1] = currentR;
-                params[i*4] = angle;
+                params[i*4 + 1] = currentR; params[i*4] = angle;
             }
-            
             groupEnergy.geometry.attributes.position.needsUpdate = true;
             groupEnergy.geometry.attributes.size.needsUpdate = true;
         }
@@ -316,8 +302,13 @@
         function createSnowSystem() {
             const positions = []; const sizes = [];
             for(let i=0; i<CONFIG.snowCount; i++) {
-                positions.push((Math.random()-0.5)*400, (Math.random()-0.5)*200+50, (Math.random()-0.5)*200-50);
-                sizes.push(Math.random() * 1.5 + 0.5);
+
+                positions.push(
+                    (Math.random()-0.5)*500, 
+                    (Math.random()-0.5)*300+100, 
+                    (Math.random()-0.5)*300-50
+                );
+                sizes.push(Math.random() * 2.0 + 0.5);
             }
             const geo = new THREE.BufferGeometry();
             geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -327,15 +318,20 @@
             scene.add(groupSnow);
         }
 
-        function updateSnow() {
+        function updateSnow(time) {
             if(!groupSnow) return;
             const positions = groupSnow.geometry.attributes.position.array;
             for(let i=1; i<positions.length; i+=3) {
-                positions[i] -= 0.15;
-                if(positions[i] < -60) positions[i] = 100;
+                positions[i] -= 0.2;
+                positions[i-1] += Math.sin(time + positions[i]*0.05) * 0.1;
+                
+                if(positions[i] < -80) {
+                    positions[i] = 150;
+                    positions[i-1] = (Math.random()-0.5)*500;
+                    positions[i+1] = (Math.random()-0.5)*300-50;
+                }
             }
             groupSnow.geometry.attributes.position.needsUpdate = true;
-            groupSnow.rotation.y += 0.0005;
         }
 
         function createParticleSystem(type, count, size) {
@@ -490,7 +486,10 @@
             const handRotY = (handX - 0.5) * 4.0;
             const isIntro = time < 8.5;
 
-            updateSnow();
+            // Xoay nhẹ background sao
+            if(groupStars) groupStars.rotation.y = time * 0.02;
+
+            updateSnow(time);
             if (isIntro) state = 'TREE';
             const speed = isIntro ? 0.2 : 0.08;
 
@@ -507,7 +506,6 @@
                     titleMesh.scale.set(sScale, sScale, sScale); starMesh.scale.set(sScale, sScale, sScale); starMesh.rotation.z = Math.sin(time)*0.1;
                 }
                 
-                // Kích hoạt hiệu ứng hút năng lượng sau khi cây mọc xong
                 if (time > 8.0) {
                     groupEnergy.visible = true;
                     updateEnergy(time);
@@ -527,7 +525,6 @@
                     for(let i=0; i<5; i++) {
                         const angle = currentRot + i * step;
                         const zVal = Math.cos(angle);
-                        
                         if (zVal > maxZ) {
                             maxZ = zVal;
                             selectedIndex = i;
@@ -576,10 +573,8 @@
             const canvas = document.getElementById('camera-preview');
             const ctx = canvas.getContext('2d');
 
-            // --- FIX LỖI KHUNG HÌNH ---
             canvas.width = 320;
             canvas.height = 240;
-            // --------------------------
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
