@@ -520,18 +520,43 @@
                     titleMesh.visible = false; starMesh.visible = false; loveMesh.visible = true; photoMeshes.forEach(m=>m.visible=false);
                 } else if (state === 'EXPLODE' || state === 'PHOTO') {
                     titleMesh.visible = false; starMesh.visible = false; loveMesh.visible = false;
+                    let maxZ = -Infinity;
+                    const currentRot = groupLeaf.rotation.y;
+                    const step = (Math.PI * 2) / 5;
+
+                    for(let i=0; i<5; i++) {
+                        const angle = currentRot + i * step;
+                        const zVal = Math.cos(angle);
+                        
+                        if (zVal > maxZ) {
+                            maxZ = zVal;
+                            selectedIndex = i;
+                        }
+                    }
+
                     if(state==='EXPLODE') {
-                        const baseA = groupLeaf.rotation.y; const step = (Math.PI*2)/5;
+                        const baseA = groupLeaf.rotation.y; 
                         photoMeshes.forEach((m,i)=>{
-                            m.visible=true; const a = baseA + i*step;
+                            m.visible=true; 
+                            const a = baseA + i*step;
                             const tx = Math.sin(a)*CONFIG.photoOrbitRadius, tz = Math.cos(a)*CONFIG.photoOrbitRadius, ty = Math.sin(time+i)*3;
-                            m.position.lerp(new THREE.Vector3(tx,ty,tz), 0.1); m.lookAt(camera.position);
-                            const s = (tz>5) ? (1+(tz/32)*0.8) : 0.6; m.scale.lerp(new THREE.Vector3(s,s,s), 0.1);
+                            
+                            m.position.lerp(new THREE.Vector3(tx,ty,tz), 0.1); 
+                            m.lookAt(camera.position);
+                            const distFactor = (tz > 0) ? (1 + (tz/32)*0.5) : 0.6; 
+                            m.scale.lerp(new THREE.Vector3(distFactor, distFactor, distFactor), 0.1);
                         });
                     } else {
                         photoMeshes.forEach((m,i)=>{
-                            if(i===selectedIndex) { m.position.lerp(new THREE.Vector3(0,0,60), 0.1); m.scale.lerp(new THREE.Vector3(5,5,5), 0.1); m.lookAt(camera.position); m.rotation.z=0; }
-                            else m.scale.lerp(new THREE.Vector3(0,0,0), 0.1);
+                            if(i===selectedIndex) { 
+                                m.position.lerp(new THREE.Vector3(0,0,60), 0.1); 
+                                m.scale.lerp(new THREE.Vector3(5,5,5), 0.1); 
+                                m.lookAt(camera.position); 
+                                m.rotation.z=0; 
+                            }
+                            else {
+                                m.scale.lerp(new THREE.Vector3(0,0,0), 0.1);
+                            }
                         });
                     }
                 }
